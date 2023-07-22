@@ -1,11 +1,18 @@
 import time
 
+SUPERPOWERS = {
+    "fire": 30,
+    "ice": 25,
+    "lightning": 35
+}
+
 class Player:
     def __init__(self, name, power):
         self.name = name
-        self.power = int(power)
+        self.power = SUPERPOWERS[power]
         self.health = 100
         self.items = []
+        self.gold = 50
 
     def __str__(self):
         return f"{self.name} (Health: {self.health}, Power: {self.power})"
@@ -18,10 +25,11 @@ class Player:
         enemy.health -= damage
         return damage
 
+
 class Enemy:
     def __init__(self, name, power, health):
         self.name = name
-        self.power = int(power)
+        self.power = power
         self.health = health
 
     def __str__(self):
@@ -50,14 +58,52 @@ def character_creation():
     display("Welcome to the RPG game!")
     display("Create your character:")
     name = input("Enter your character's name: ")
-    power = input("Choose a superpower (e.g., fire, ice, lightning): ").lower()  # Convert to lowercase
+    while True:
+        power = input("Choose a superpower (fire, ice, lightning): ").lower()
+        if power in ['fire', 'ice', 'lightning']:
+            break
+        else:
+            print("Invalid power. Please choose either fire, ice, or lightning.")
     return Player(name, power)
+
+class Item:
+    def __init__(self, name, description, cost=0):
+        self.name = name
+        self.description = description
+        self.cost = cost
+
+    def __str__(self):
+        return f"{self.name}: {self.description} (Cost: {self.cost} gold)"
 
 def intro(player):
     display(f"{player.name}, you wake up in a mysterious forest with no memory of how you got here.")
     display("You notice a glowing orb in front of you. As you touch it, you feel immense power surging through you.")
     display(f"Congratulations! {player.name}, you now possess the power of {player.power}!")
 
+def use_item(player):
+    if len(player.items) == 0:
+        display("You don't have any items.")
+    else:
+        display("Select an item to use:")
+        for idx, item in enumerate(player.items, 1):
+            print(f"{idx}. {item}")
+        choice = get_choice(len(player.items))
+        item_to_use = player.items.pop(choice - 1)
+        if item_to_use.name == "Healing Potion":
+            player.health += 50
+            if player.health > player.max_health:
+                player.health = player.max_health
+            display("You used the Healing Potion. Your health is restored.")
+        elif item_to_use.name == "Enchanted Amulet":
+            player.health += 20
+            if player.health > player.max_health:
+                player.health = player.max_health
+            display("You used the Enchanted Amulet. Your health is boosted.")
+        elif item_to_use.name == "Water Nymph Tears":
+            player.health = player.max_health
+            display("You used the Water Nymph Tears. Your health is fully restored.")
+        else:
+            display("You can implement the effect of other items here.")
 def fight_enemy(player, enemy):
     while player.health > 0 and enemy.health > 0:
         display(f"{player.name}, your health: {player.health}")
@@ -81,34 +127,7 @@ def fight_enemy(player, enemy):
                 break
 
         elif choice == 2:
-            if len(player.items) == 0:
-                display("You don't have any items.")
-            else:
-                display("You can implement the item usage logic here.")
-                # For demonstration purposes, we'll remove the item after using it.
-                player.items.pop()
-
-def main():
-    player = character_creation()
-    intro(player)
-
-    enemy1 = Enemy("Evil Goblin", 10, 50)
-    display(f"A wild {enemy1.name} appears!")
-    fight_enemy(player, enemy1)
-
-    # Add more locations, enemies, and interactions here
-
-if __name__ == "__main__":
-    main()
-
-
-class Item:
-    def __init__(self, name, description):
-        self.name = name
-        self.description = description
-
-    def __str__(self):
-        return f"{self.name}: {self.description}"
+            use_item(player)
 
 def explore(player):
     display(f"{player.name}, you continue your journey through the mysterious forest.")
@@ -124,126 +143,37 @@ def explore(player):
         player.items.append(Item("Healing Potion", "Restores 50 health"))
     else:
         display("You decide not to enter the cave and continue exploring the forest.")
-
-def use_item(player):
-    if len(player.items) == 0:
-        display("You don't have any items.")
-    else:
-        display("Select an item to use:")
-        for idx, item in enumerate(player.items, 1):
-            print(f"{idx}. {item}")
-        choice = get_choice(len(player.items))
-        item_to_use = player.items.pop(choice - 1)
-        if item_to_use.name == "Healing Potion":
-            player.health += 50
-            if player.health > 100:
-                player.health = 100
-            display("You used the Healing Potion. Your health is restored.")
-        else:
-            display("You can implement the effect of this item here.")
-
-def main():
-    player = character_creation()
-    intro(player)
-
-    enemy1 = Enemy("Evil Goblin", 10, 50)
-    display(f"A wild {enemy1.name} appears!")
-    fight_enemy(player, enemy1)
-
-    # Add more locations, enemies, and interactions here
-
-    explore(player)
-
-    # Continue the game with more interactions and content
-
-if __name__ == "__main__":
-    main()
-
-
-
 def visit_shop(player):
     display(f"{player.name}, you come across a mysterious shop hidden in the forest.")
     display("The shopkeeper welcomes you and offers to sell various items.")
     display("Here are the items available for purchase:")
     
     shop_items = [
-        Item("Fire Sword", "Deals extra damage with fire element (cost: 30 gold)"),
-        Item("Ice Staff", "Freezes enemies temporarily (cost: 25 gold)"),
-        Item("Lightning Ring", "Shocks enemies in battle (cost: 20 gold)")
+        Item("Fire Sword", "Deals extra damage with fire element", 30),
+        Item("Ice Staff", "Freezes enemies temporarily", 25),
+        Item("Lightning Ring", "Shocks enemies in battle", 20)
     ]
     
     for idx, item in enumerate(shop_items, 1):
-        display(f"{idx}. {item.name} - {item.description}")
+        display(f"{idx}. {item.name} - {item.description} (Cost: {item.cost} gold)")
 
-    display("You currently have 50 gold.")
+    display(f"You currently have {player.gold} gold.")
     display("Select an item to purchase or enter '0' to exit the shop.")
     
-    choice = get_choice(len(shop_items))
+    choice = get_choice(len(shop_items) + 1)
     
     if choice == 0:
         display("You thank the shopkeeper and leave the shop.")
-    elif player.items.count("Golden Key") > 0 and choice == 1:
-        display("You already have the Golden Key, no need to buy another one!")
-    elif choice == 1 and player.items.count("Golden Key") == 0:
-        if player.items.count("Fire Sword") > 0:
-            display("You already have the Fire Sword, no need to buy another one!")
-        elif player.gold >= 30:
-            player.gold -= 30
-            player.items.append(Item("Fire Sword", "Deals extra damage with fire element"))
-            display("Congratulations! You purchased the Fire Sword.")
+    else:
+        item_to_buy = shop_items[choice - 1]
+        if item_to_buy.name in [item.name for item in player.items]:
+            display(f"You already have the {item_to_buy.name}, no need to buy another one!")
+        elif player.gold >= item_to_buy.cost:
+            player.gold -= item_to_buy.cost
+            player.items.append(item_to_buy)
+            display(f"Congratulations! You purchased the {item_to_buy.name}.")
         else:
-            display("You don't have enough gold to buy the Fire Sword.")
-    elif choice == 2:
-        if player.items.count("Ice Staff") > 0:
-            display("You already have the Ice Staff, no need to buy another one!")
-        elif player.gold >= 25:
-            player.gold -= 25
-            player.items.append(Item("Ice Staff", "Freezes enemies temporarily"))
-            display("Congratulations! You purchased the Ice Staff.")
-        else:
-            display("You don't have enough gold to buy the Ice Staff.")
-    elif choice == 3:
-        if player.items.count("Lightning Ring") > 0:
-            display("You already have the Lightning Ring, no need to buy another one!")
-        elif player.gold >= 20:
-            player.gold -= 20
-            player.items.append(Item("Lightning Ring", "Shocks enemies in battle"))
-            display("Congratulations! You purchased the Lightning Ring.")
-        else:
-            display("You don't have enough gold to buy the Lightning Ring.")
-
-
-
-def main():
-    player = character_creation()
-    intro(player)
-
-    enemy1 = Enemy("Evil Goblin", 10, 50)
-    display(f"A wild {enemy1.name} appears!")
-    fight_enemy(player, enemy1)
-
-    # Add more locations, enemies, and interactions here
-
-    explore(player)
-
-    # Continue the game with more interactions and content
-
-    visit_shop(player)
-
-    # Continue the game with more interactions and content
-
-    final_boss_encounter(player)
-
-""" if __name__ == "__main__":
-    main()
- """
-
-class Location:
-    def __init__(self, name, description):
-        self.name = name
-        self.description = description
-
-
+            display(f"You don't have enough gold to buy the {item_to_buy.name}.")
 def explore_enchanted_lake(player):
     display("At the Enchanted Lake, you encounter a group of water nymphs.")
     display("They offer you a choice:")
@@ -279,7 +209,6 @@ def explore_cursed_swamp(player):
             display("Incorrect answer. The cursed creatures decide not to share their secret.")
     else:
         display("You decide not to participate in the riddle challenge and continue your journey.")
-
 def explore_mystic_mountains(player):
     display("As you climb the Mystic Mountains, you discover an ancient shrine.")
     display("The shrine presents you with a mystical test of courage.")
@@ -320,18 +249,19 @@ def final_boss_encounter(player):
     else:
         display("Congratulations! You defeated the Dark Sorcerer and restored balance to the forest.")
         display("You are hailed as the hero of the land!")
-
 def main():
-    # The code from Part 3 goes here
+    player = character_creation()
+    intro(player)
+
+    enemy1 = Enemy("Evil Goblin", 10, 50)
+    display(f"A wild {enemy1.name} appears!")
+    fight_enemy(player, enemy1)
 
     explore(player)
-
-    # Continue the game with more interactions and content
-
     visit_shop(player)
-
-    # Continue the game with more interactions and content
-
+    explore_enchanted_lake(player)
+    explore_cursed_swamp(player)
+    explore_mystic_mountains(player)
     final_boss_encounter(player)
 
 if __name__ == "__main__":
